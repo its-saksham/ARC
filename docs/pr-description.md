@@ -2,6 +2,6 @@ ARC now provides a five-person personal development beta: typed email OTP, one-t
 
 The PostgreSQL migrations implement sealed versioned catalogs, RLS, append-only completions, per-user locking, idempotency aliases, and public invoker RPCs backed by private definer functions. Rewards and local dates are server authoritative. The catalog contains 25 human-authored quests.
 
-Validation: typecheck, lint, Vitest/React Testing Library, real local PostgreSQL security/concurrency and SQL/TypeScript parity tests, production build, dependency audit, and mobile Playwright flows. Browser Supabase HTTP responses are mocked; hosted Supabase JWT/auth configuration and email delivery still need verification on a dedicated ARC project. See README for exact setup and deployment steps.
+Validation: typecheck, lint, Vitest/React Testing Library, real local PostgreSQL security/concurrency and SQL/TypeScript parity tests, production build, dependency audit, and mobile Playwright flows. Dependencies install from public npm without private registry credentials. Browser Supabase HTTP responses are mocked. Both migrations were applied to the user-provided ARC project; hosted catalog and completion write restrictions were checked, and security advisors reported no warnings/errors. Hosted email configuration/delivery and an authenticated beta flow still need verification. See README for setup and deployment steps.
 
 Do not merge until the hosted setup is reviewed and real beta email sign-in and completion are verified.

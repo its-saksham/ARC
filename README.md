@@ -37,7 +37,7 @@ Without these variables, the app displays a setup state rather than pretending t
 
 ## Hosted Supabase setup
 
-No hosted ARC project has been linked or modified. The connected organization reported a free plan and a new-project quote of $0/month during inspection. Its two existing projects are unrelated and were left untouched. Confirm the current plan, free-project availability, and intended organization before creating a dedicated **ARC** project. A free quote does not bypass organization limits.
+The user-provided ARC project is `sibufkhplnvwjtjdkmsb`. Both schema and catalog migrations were applied on 2026-10-01; the hosted catalog contains 25 quests across five attributes. Existing unrelated projects were untouched. Local `.env.local` points to ARC using its browser-safe publishable key and remains ignored by Git. Email delivery/configuration and HTTPS deployment still require setup below.
 
 1. Create an ARC-only project, ideally near your beta users. Keep the Data API exposed schemas limited to `public` (and the default `graphql_public` if needed); **never expose `private`**.
 2. Authenticate and link using the normal CLI flow:
@@ -128,7 +128,7 @@ Vitest/React Testing Library cover domain/date rules, storage isolation, cancell
 
 Build command: `npm ci && npm run build`. Publish `dist` on an HTTPS static host. Configure SPA fallback to `index.html` while serving real assets/manifest/service worker normally; Netlify `_redirects` and Vercel config are provided. Serve `/sw.js` and `/index.html` with revalidation/no-cache; hashed assets may have immutable caching. Never deploy a build using the browser-test public key. Keep public Supabase variables in the host's environment.
 
-The repository was empty. Local `main` contains the baseline commit and `feat/arc-v1` contains the implementation, allowing a real PR after both branches are published. Per the user's handoff, the user performs pushes:
+The repository was empty. `main` contains the baseline commit and `feat/arc-v1` contains the implementation. Both branches are published, and the draft PR is [ARC V1 #1](https://github.com/its-saksham/ARC/pull/1). To publish further changes manually:
 
 ```sh
 git push -u origin main
@@ -136,4 +136,6 @@ git push -u origin feat/arc-v1
 gh pr create --repo its-saksham/ARC --base main --head feat/arc-v1 --title "Build ARC V1 personal development PWA" --body-file docs/pr-description.md
 ```
 
-The early push dry run returned HTTP 403 because Git authenticated as `SakshamDAZN`, which lacks write access to `its-saksham/ARC`. If needed, run `gh auth login --hostname github.com --git-protocol https --web` as the intended account, then `gh auth setup-git`. Connector authorization in ChatGPT does not supply Git CLI credentials. No PR has been merged.
+The early push dry run returned HTTP 403 for `SakshamDAZN`; write access was subsequently available and publication succeeded. If authentication fails again, use `gh auth login --hostname github.com --git-protocol https --web`, then `gh auth setup-git`. Connector authorization in ChatGPT does not supply Git CLI credentials. No PR has been merged.
+
+ARC's `.npmrc` and lockfile use the public npm registry. No private registry credentials are needed for installation or CI.
