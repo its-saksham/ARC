@@ -53,7 +53,7 @@ The user-provided ARC project is `sibufkhplnvwjtjdkmsb`. Both schema and catalog
 
 3. Enable the email provider and email confirmations. Set the OTP length to 6, minimum send interval to 60 seconds, and an appropriate short expiry (the local config uses 3600 seconds).
 4. Set both **Magic Link** and **Confirm Signup** email templates to the content in `supabase/templates/otp.html`, including `{{ .Token }}`. Email OTP uses these templates; `signInWithOtp` would otherwise send a link. Configure the Site URL for the deployed ARC origin. See [Supabase's email OTP documentation](https://supabase.com/docs/guides/auth/auth-email-passwordless).
-5. Configure an SMTP service you already have, or obtain approval before paying for one. Supabase's default mail service is restricted; do not assume it can deliver to all five beta users. See [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+5. Configure an SMTP service you already have, or obtain approval before paying for one. On this free ARC project, Supabase rejects email-template changes while using its default provider (HTTP 400: custom SMTP or a plan upgrade is required). Custom SMTP is therefore required for typed-code emails without upgrading the project. Default delivery is also restricted; do not assume it can deliver to all five beta users. See [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 6. Set your hosting environment to the ARC API URL and browser-safe publishable key. Verify sign-in with an actual beta email, then onboarding and a quest completion. Check database advisors and keep anonymous sign-ins disabled.
 
 Only the first five authenticated users to finish onboarding are admitted; concurrent onboarding is serialized. Retrying onboarding returns the existing profile without altering focus, timezone, or catalog version. Focus and timezone are intentionally fixed during V1.
@@ -127,6 +127,8 @@ Vitest/React Testing Library cover domain/date rules, storage isolation, cancell
 ## Deployment and handoff
 
 Build command: `npm ci && npm run build`. Publish `dist` on an HTTPS static host. Configure SPA fallback to `index.html` while serving real assets/manifest/service worker normally; Netlify `_redirects` and Vercel config are provided. Serve `/sw.js` and `/index.html` with revalidation/no-cache; hashed assets may have immutable caching. Never deploy a build using the browser-test public key. Keep public Supabase variables in the host's environment.
+
+The selected host is Vercel. Import only `its-saksham/ARC`, select the Vite preset, and use `feat/arc-v1` as the production branch while the PR remains unmerged. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` from the local ARC environment. Set Supabase's Site URL to the final HTTPS origin after deployment. Management/SMTP credentials are server-side setup credentials; never give them a `VITE_` prefix or include them in frontend configuration.
 
 The repository was empty. `main` contains the baseline commit and `feat/arc-v1` contains the implementation. Both branches are published, and the draft PR is [ARC V1 #1](https://github.com/its-saksham/ARC/pull/1). To publish further changes manually:
 
