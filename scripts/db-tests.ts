@@ -13,12 +13,12 @@ if (!url || !["localhost", "127.0.0.1"].includes(new URL(url).hostname))
   );
 const admin = new Client({ connectionString: url });
 await admin.connect();
-async function asUser(u: string | null, sql: string, args: unknown[] = []) {
+async function asUser(u: string | null, sql: string, args: unknown[] = [], role: "authenticated" | "anon" = "authenticated") {
   const c = new Client({ connectionString: url });
   await c.connect();
   try {
     await c.query("begin");
-    await c.query("set local role authenticated");
+    await c.query(`set local role ${role}`);
     await c.query("select set_config('request.jwt.claim.sub',$1,true)", [
       u ?? "",
     ]);
@@ -43,12 +43,17 @@ try {
       "Database is not empty. Use a NEW disposable database; this suite never resets existing data.",
     );
   await admin.query(
-    `create schema if not exists auth; do $$begin create role anon nologin;exception when duplicate_object then null;end$$;do $$begin create role authenticated nologin;exception when duplicate_object then null;end$$;create table if not exists auth.users(id uuid primary key);create or replace function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;`,
+    `create schema if not exists auth; do $$begin create role anon nologin;exception when duplicate_object then null;end$$;do $$begin create role authenticated nologin;exception when duplicate_object then null;end$$;create table if not exists auth.users(id uuid primary key, email text default 'test@example.invalid', email_confirmed_at timestamptz default now(), is_anonymous boolean default false);create or replace function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;`,
   );
   for (const file of readdirSync("supabase/migrations").sort())
     await admin.query(readFileSync(`supabase/migrations/${file}`, "utf8"));
   await admin.query(readFileSync("supabase/seed.sql", "utf8"));
-  await admin.query("insert into auth.users values($1),($2)", [u, other]);
+  const availability = async () => (await asUser(null,"select public.get_beta_availability() a",[],"anon")).rows[0].a;
+  assert.deepEqual(Object.keys(await availability()).sort(), ["capacity","checked_at","remaining"]);
+  assert.equal((await availability()).capacity, 15);
+  assert.equal((await availability()).remaining, 15);
+  await assert.rejects(asUser(null,"select * from public.profiles",[],"anon"), /permission denied/);
+  await admin.query("insert into auth.users(id) values($1),($2)", [u, other]);
   await assert.rejects(
     asUser(null, "select public.get_today()"),
     /Session expired/,
@@ -62,6 +67,7 @@ try {
     /IANA timezone/,
   );
   await asUser(u, "select public.save_onboarding('Perception','Asia/Kolkata')");
+  assert.equal((await availability()).remaining, 14);
   await asUser(u, "select public.save_onboarding('Vitality','UTC')");
   assert.equal(
     (await asUser(u, "select * from public.profiles")).rows[0].focus,
@@ -334,20 +340,77 @@ try {
   console.log(
     "PASS midnight guard for uncommitted requests and authoritative prior-day idempotent recovery",
   );
-  for (let i = 3; i <= 6; i++) {
-    const id = `${i}${i}${i}${i}${i}${i}${i}${i}-3333-4333-8333-333333333333`;
-    await admin.query("insert into auth.users values($1)", [id]);
-    if (i < 6)
-      await asUser(id, "select public.save_onboarding('Perception','UTC')");
-    else
-      await assert.rejects(
-        asUser(id, "select public.save_onboarding('Perception','UTC')"),
-        /beta is full/,
-      );
+  for (let i = 3; i <= 14; i++) {
+    const id = crypto.randomUUID();
+    await admin.query("insert into auth.users(id) values($1)", [id]);
+    await asUser(id, "select public.save_onboarding('Perception','UTC')");
   }
+  assert.equal((await availability()).remaining, 1);
+  const racers = [crypto.randomUUID(),crypto.randomUUID()];
+  await admin.query("insert into auth.users(id) values($1),($2)",racers);
+  const admission = await Promise.allSettled(racers.map(id => asUser(id,"select public.save_onboarding('Perception','UTC')")));
+  assert.equal(admission.filter(r => r.status === "fulfilled").length,1);
+  assert.equal(admission.filter(r => r.status === "rejected" && /beta is full/.test(r.reason.message)).length,1);
+  assert.equal((await availability()).remaining, 0);
+  assert.equal((await admin.query("select count(*)::int n from public.profiles")).rows[0].n,15);
+  await asUser(u,"select public.save_onboarding('Vitality','UTC')");
+  assert.equal((await asUser(u,"select focus from public.profiles")).rows[0].focus,"Perception");
   console.log(
-    "PASS historical SQL/TS parity, analytics validation, five-user beta gate",
+    "PASS aggregate-only availability, 15-user gate, concurrent last-seat admission and existing-user retry",
   );
+  await assert.rejects(asUser(null,"select public.get_waitlist()",[],"anon"),/permission denied/);
+  await assert.rejects(asUser(null,"select public.join_waitlist()",[],"anon"),/permission denied/);
+  await assert.rejects(asUser(null,"select public.leave_waitlist()",[],"anon"),/permission denied/);
+  await assert.rejects(asUser(null,"select public.join_waitlist('direct')"),/Session expired/);
+  await assert.rejects(asUser(u,"select * from private.waitlist_entries"),/permission denied/);
+  await assert.rejects(asUser(u,"insert into private.waitlist_entries(user_id) values($1)",[other]),/permission denied/);
+  await assert.rejects(asUser(u,"update private.waitlist_entries set source='x'"),/permission denied/);
+  await assert.rejects(asUser(u,"delete from private.waitlist_entries"),/permission denied/);
+  await assert.rejects(asUser(u,"select public.join_waitlist('arbitrary')"),/Invalid source/);
+  await assert.rejects(asUser(u,"select public.join_waitlist(null)"),/Invalid source/);
+  const unconfirmed = crypto.randomUUID();
+  await admin.query("insert into auth.users(id,email_confirmed_at) values($1,null)",[unconfirmed]);
+  await assert.rejects(asUser(unconfirmed,"select public.join_waitlist('direct')"),/verified email/);
+  await assert.rejects(asUser(crypto.randomUUID(),"select public.join_waitlist('direct')"),/Session expired/);
+  const anonymous = crypto.randomUUID();
+  await admin.query("insert into auth.users(id,is_anonymous) values($1,true)",[anonymous]);
+  await assert.rejects(asUser(anonymous,"select public.join_waitlist('direct')"),/verified email/);
+  const readWaitlist = async (id:string) => (await asUser(id,"select public.get_waitlist() w")).rows[0].w;
+  assert.deepEqual(await readWaitlist(u),{joined:false,created_at:null});
+  const join = async (id:string) => (await asUser(id,"select public.join_waitlist('reddit') w")).rows[0].w;
+  const joined = await join(u);
+  assert.equal(joined.joined,true);
+  assert.ok(Number.isFinite(Date.parse(joined.created_at)));
+  assert.deepEqual(await join(u),joined);
+  assert.deepEqual((await asUser(u,"select public.join_waitlist('x') w")).rows[0].w,joined);
+  assert.equal((await admin.query("select source from private.waitlist_entries where user_id=$1",[u])).rows[0].source,"reddit");
+  await assert.rejects(asUser(unconfirmed,"select public.get_waitlist()"),/verified email/);
+  const defaultUser = crypto.randomUUID();
+  await admin.query("insert into auth.users(id) values($1)",[defaultUser]);
+  await asUser(defaultUser,"select public.join_waitlist()");
+  assert.equal((await admin.query("select source from private.waitlist_entries where user_id=$1",[defaultUser])).rows[0].source,"direct");
+  await asUser(defaultUser,"select public.leave_waitlist()");
+  await asUser(defaultUser,"select public.join_waitlist('x')");
+  assert.equal((await admin.query("select source from private.waitlist_entries where user_id=$1",[defaultUser])).rows[0].source,"x");
+  const duplicate = await Promise.all([join(other),join(other)]);
+  assert.deepEqual(duplicate[0],duplicate[1]);
+  await asUser(u,"select public.leave_waitlist()");
+  await asUser(u,"select public.leave_waitlist()");
+  assert.deepEqual(await readWaitlist(u),{joined:false,created_at:null});
+  assert.deepEqual(await readWaitlist(other),duplicate[0]);
+  // A rejected-onboarding user can join without consuming a profile slot.
+  const rejected = racers[admission[0].status === "rejected" ? 0 : 1];
+  await join(rejected);
+  assert.equal((await admin.query("select count(*)::int n from public.profiles")).rows[0].n,15);
+  assert.equal((await availability()).remaining,0);
+  const deleted = crypto.randomUUID();
+  await admin.query("insert into auth.users(id) values($1)",[deleted]);
+  await join(deleted);
+  await admin.query("delete from auth.users where id=$1",[deleted]);
+  assert.equal((await admin.query("select count(*)::int n from private.waitlist_entries where user_id=$1",[deleted])).rows[0].n,0);
+  await assert.rejects(asUser(deleted,"select public.get_waitlist()"),/Session expired/);
+  assert.equal((await admin.query("select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prosecdef and p.proname in ('get_beta_availability','get_waitlist','join_waitlist','leave_waitlist')")).rows[0].n,0);
+  console.log("PASS confirmed-email private waitlist, deny-by-default grants, account isolation, duplicate/concurrent join, leave and cascade deletion");
 } finally {
   await admin.end();
 }

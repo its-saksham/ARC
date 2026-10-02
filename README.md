@@ -1,6 +1,6 @@
 # ARC V1
 
-A mobile-first personal development PWA for a free five-person beta. Email codes unlock one-time onboarding, three daily quests, XP/levels/ranks, streaks, an accessible attribute radar, and a profile. There are no payments, leaderboards, social features, guest accounts, or generated quests.
+A mobile-first personal development PWA for a free 15-person beta. Email codes unlock one-time onboarding, three daily quests, XP/levels/ranks, streaks, an accessible attribute radar, and a profile. There are no payments, leaderboards, social features, guest accounts, or generated quests.
 
 ## Local setup
 
@@ -56,7 +56,7 @@ The user-provided ARC project is `sibufkhplnvwjtjdkmsb`. Both schema and catalog
 5. Configure an SMTP service you already have, or obtain approval before paying for one. On this free ARC project, Supabase rejects email-template changes while using its default provider (HTTP 400: custom SMTP or a plan upgrade is required). Custom SMTP is therefore required for typed-code emails without upgrading the project. Default delivery is also restricted; do not assume it can deliver to all five beta users. See [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 6. Set your hosting environment to the ARC API URL and browser-safe publishable key. Verify sign-in with an actual beta email, then onboarding and a quest completion. Check database advisors and keep anonymous sign-ins disabled.
 
-Only the first five authenticated users to finish onboarding are admitted; concurrent onboarding is serialized. Retrying onboarding returns the existing profile without altering focus, timezone, or catalog version. Focus and timezone are intentionally fixed during V1.
+Only the first 15 authenticated users to finish onboarding are admitted; concurrent onboarding is serialized. Retrying onboarding returns the existing profile without altering focus, timezone, or catalog version. Focus and timezone are intentionally fixed during V1. The public `get_beta_availability` RPC returns only capacity, remaining seats, and a check timestamp; no seat is reserved before onboarding. Verified-email users can use `get_waitlist`, `join_waitlist`, and `leave_waitlist` to manage their own private waitlist entry without consuming a beta seat. Sources are limited to `direct`, `reddit`, and `x`. The additive capacity and waitlist migrations were applied to ARC on 2026-10-02.
 
 ## Daily assignment and progression
 

@@ -1,5 +1,15 @@
 # ARC V1 verification record
 
+## 2026-10-02 beta backend
+
+Applied `20261002130137_arc_beta_capacity` and `20261002130138_arc_verified_waitlist` to ARC only. Hosted migration history matches the repository filenames. No PR merge, push, or new commit was performed.
+
+Local PostgreSQL 17.11 integration tests passed all six groups. Tests were first observed failing on the missing availability function, then passing capacity checks and failing on the missing waitlist function, then passing with both migrations. Coverage includes aggregate-only anonymous availability, concurrent last-seat admission, existing-profile retries, confirmed/non-anonymous email requirements, direct-table and anonymous RPC denial, account isolation, all source values, duplicate/concurrent joins, idempotent leave, and cascading auth-user deletion. Waitlist membership does not consume a seat.
+
+Typecheck, lint, production build, and all 30 unit tests passed. An independent read-only reviewer found no Critical or Important source issues; both minor test-coverage suggestions were addressed. Local PostgreSQL tooling is ignored and excluded from lint.
+
+Live HTTP inspection used the public key embedded in the deployed `www.tryarc.co.in` bundle without displaying it. The ARC PostgREST endpoint returned capacity 15 and remaining 14. Hosted checks verified all new public wrappers are security invokers, private implementations use empty search paths, and the waitlist table enables RLS with no anonymous/authenticated direct access. A hosted authenticated-role waitlist exercise succeeded in a rolled-back transaction, preserving existing membership. These database-role checks do not prove browser JWT handling or fresh OTP delivery; no production email was sent and no browser end-to-end flow was tested in this backend task.
+
 Verified on 2026-10-01 with Node 22.23.3 and PostgreSQL 17.11.
 
 | Check                         | Result                         | Scope                                                                                                                                                                                                                                            |
