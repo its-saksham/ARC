@@ -1,0 +1,48 @@
+.site {max-width:1200px;margin:auto;padding:0 32px;}
+.header {display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:96px;border-bottom:1px solid var(--border);}
+.brand {font-size:30px;font-weight:750;letter-spacing:-.04em;color:var(--text);}
+.header nav,.footer nav {display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+.header nav a,.footer nav a {min-height:44px;display:inline-flex;align-items:center;font-size:14px;}
+.outline {border:1px solid var(--border);border-radius:8px;padding:8px 18px;}
+.hero {display:grid;grid-template-columns:1.2fr 1fr;gap:64px;align-items:center;padding:88px 0 72px;}
+.hero h1 {font-size:clamp(2.3rem,4.4vw,3.8rem);font-weight:650;letter-spacing:-.045em;line-height:1.12;}
+.lead {font-size:18px;max-width:38ch;margin:24px 0 32px;}
+.actions {display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.primary {display:inline-flex;align-items:center;justify-content:center;min-height:52px;border-radius:9px;padding:12px 24px;background:var(--accent);color:var(--background);font-weight:650;}
+.primary:hover {background:#d1e5fa;}
+.secondary {display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-weight:600;}
+.availability {margin-top:24px;min-height:90px;}
+.availability p {margin-bottom:6px;}
+.availability button {font-size:14px;margin:8px 0;}
+.note {font-size:14px;color:var(--muted);line-height:1.5;}
+.preview {background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.previewLabel {padding:20px 24px;margin:0;border-bottom:1px solid var(--border);font-size:16px;}
+.previewBody {padding:28px 24px;}
+.previewTitle {display:flex;align-items:center;gap:18px;margin-bottom:28px;}
+.previewTitle h2 {font-size:21px;margin-bottom:12px;}
+.symbol {display:grid;place-items:center;width:56px;height:56px;flex-shrink:0;border:1px solid var(--border);border-radius:50%;color:var(--accent);}
+.tag {display:inline-block;color:var(--accent);background:#253b51;padding:4px 12px;border-radius:20px;font-size:14px;}
+.previewBody > p {font-size:17px;max-width:34ch;}
+.previewReward {display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--border);padding-top:24px;margin-top:32px;color:var(--accent);}
+.previewReward span {font-size:14px;color:var(--muted);}
+.preview > .note {padding:0 24px 20px;margin:0;}
+.section {border-top:1px solid var(--border);padding:48px 0;}
+.section h2 {font-size:clamp(1.6rem,3vw,2rem);font-weight:600;margin-bottom:32px;}
+.steps {display:grid;grid-template-columns:repeat(3,1fr);gap:32px;padding:0;list-style:none;}
+.steps li {display:flex;align-items:flex-start;gap:18px;}
+.steps svg {color:var(--accent);flex-shrink:0;margin-top:4px;}
+.steps h3 {font-size:18px;margin:0 0 12px;font-weight:600;}
+.steps p {margin:0;font-size:16px;}
+.attributes {display:flex;flex-wrap:wrap;gap:16px 32px;padding:28px 0;border-top:1px solid var(--border);color:var(--accent);font-size:16px;}
+.faqIntro {display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.faqIntro p {max-width:45ch;}
+.faq details {border-bottom:1px solid var(--border);padding:18px 0;}
+.faq summary {cursor:pointer;min-height:44px;display:list-item;align-content:center;color:var(--text);}
+.faq p {max-width:70ch;margin:12px 0 4px;}
+.faq a {color:var(--accent);text-decoration:underline;}
+.footer {display:flex;align-items:center;gap:24px;padding:32px 0;border-top:1px solid var(--border);font-size:14px;color:var(--muted);}
+.footer nav {margin-left:auto;}
+.skip {position:absolute;top:-100px;}
+.skip:focus {top:8px;background:var(--accent);color:var(--background);padding:12px;z-index:10;}
+@media(max-width:800px) {.hero{gap:32px;padding:56px 0;}.steps{grid-template-columns:1fr;}.hero h1{font-size:2.7rem;}.footer{flex-wrap:wrap;}.footer nav{margin-left:0;}}
+@media(max-width:600px) {.site{padding:0 20px;}.header{min-height:88px;gap:16px;flex-wrap:wrap;padding:18px 0;}.header nav{gap:12px;}.header nav a{font-size:14px;}.hero{grid-template-columns:1fr;gap:24px;padding:40px 0;}.hero h1{font-size:clamp(2rem,8vw,2.8rem);}.lead{font-size:17px;}.faqIntro{grid-template-columns:1fr;gap:0;}.section{padding:32px 0;}.actions{gap:16px;}.previewReward{flex-wrap:wrap;}.header .outline{padding:6px 12px;}}

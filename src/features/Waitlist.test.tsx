@@ -1,0 +1,27 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { Session } from "@supabase/supabase-js";
+import { beforeEach, expect, it, vi } from "vitest";
+const api = vi.hoisted(() => ({get:vi.fn(),join:vi.fn(),leave:vi.fn()}));
+vi.mock("../lib/betaApi", () => ({getWaitlist:api.get,joinWaitlist:api.join,leaveWaitlist:api.leave}));
+vi.mock("../lib/api", () => ({configured:true,supabase:{auth:{signOut:vi.fn()}}}));
+import { Waitlist } from "./Waitlist";
+const session = {user:{id:"one",email:"beta@example.com"}} as Session;
+beforeEach(() => {vi.clearAllMocks();api.get.mockResolvedValue({joined:false,created_at:null});});
+it("does not autojoin signed-in users and only confirms successful persistence", async () => {
+  api.join.mockRejectedValueOnce(new Error("Unable to save")).mockResolvedValue({joined:true,created_at:"2026-10-02T10:00:00Z"});
+  api.leave.mockRejectedValueOnce(new Error("Unable to leave")).mockResolvedValue({joined:false,created_at:null});
+  render(<MemoryRouter><Waitlist session={session} /></MemoryRouter>);
+  const join = await screen.findByRole("button",{name:"Join waitlist"});
+  expect(api.join).not.toHaveBeenCalled();
+  fireEvent.click(join);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Unable to save");
+  expect(screen.queryByText("You're on the waitlist.")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"Join waitlist"}));
+  expect(await screen.findByText("You're on the waitlist.")).toBeVisible();
+  fireEvent.click(screen.getByRole("button",{name:"Leave waitlist"}));
+  expect(await screen.findByRole("alert")).toHaveTextContent("Unable to leave");
+  expect(screen.getByText("You're on the waitlist.")).toBeVisible();
+  fireEvent.click(screen.getByRole("button",{name:"Leave waitlist"}));
+  expect(await screen.findByRole("button",{name:"Join waitlist"})).toBeVisible();
+});
