@@ -10,3 +10,7 @@ test-results/
 supabase/.temp/
 supabase/.branches/
 .DS_Store
+
+# Project-local imported skills and agent execution scratch data.
+/.agents/skills/
+/.superpowers/

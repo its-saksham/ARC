@@ -2,7 +2,7 @@ import js from "@eslint/js";
 import ts from "typescript-eslint";
 import hooks from "eslint-plugin-react-hooks";
 export default ts.config(
-  { ignores: ["dist/**", "node_modules/**", "public/sw.js"] },
+  { ignores: ["dist/**", "node_modules/**", "public/sw.js", ".agents/skills/**", ".superpowers/**"] },
   js.configs.recommended,
   ...ts.configs.recommended,
   {

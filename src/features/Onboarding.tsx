@@ -49,7 +49,7 @@ export function Onboarding({
       <div className={styles.brand}>
         ARC<span>YOUR STARTING POINT</span>
       </div>
-      <p className={styles.eyebrow}>01 / Set your direction</p>
+      <p className={styles.eyebrow}>Set your direction</p>
       <h1>
         What will you
         <br />
@@ -121,9 +121,8 @@ export function Onboarding({
           Focus and timezone are saved once for this beta.
         </p>
         {error && (
-          <p role="alert" className={styles.error}>
-            {error}
-          </p>
+          <><p role="alert" className={styles.error}>{error}</p>
+          {/beta is full/i.test(error) && <a className={styles.back} href="/waitlist">Join waitlist</a>}</>
         )}
         <button className={styles.primary} disabled={busy}>
           {busy ? "Saving…" : "Begin my arc"}

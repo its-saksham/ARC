@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { attributes } from "../domain/assignment";
 import type { DailyQuest, Today } from "../lib/api";
 import styles from "../ui.module.css";
+import { Icon } from "./Icon";
 const focusName: Record<string, string> = {
   Perception: "Build discipline",
   Vitality: "Improve physical health",
@@ -17,42 +18,14 @@ export function TodayPage({ today }: { today: Today }) {
     <>
       <div className={styles.pageHeading}>
         <p className={styles.eyebrow}>{date}</p>
-        <h1>
-          Every day,
-          <br />a little stronger.
-        </h1>
-        <p>Your next chapter is built one action at a time.</p>
+        <h1>Make today count.</h1>
+        <p>Three quests. One steady arc.</p>
       </div>
-      <section className={styles.progressCard} aria-label="Your progression">
-        <div className={styles.rank}>
-          {today.rank}
-          <small>RANK</small>
-        </div>
-        <div className={styles.level}>
-          <span className={styles.eyebrow}>LEVEL {today.level}</span>
-          <strong>
-            {today.total_xp.toLocaleString()} <small>total XP</small>
-          </strong>
-          <progress
-            value={progress}
-            max={200}
-            aria-label="XP toward next level"
-          />
-          <span className={styles.small}>
-            {200 - progress} XP to level {today.level + 1}
-          </span>
-        </div>
-        <div className={styles.streak}>
-          <strong>{today.streak}</strong>
-          <span>day streak</span>
-        </div>
-      </section>
       <div className={styles.sectionHeading}>
         <div>
-          <p className={styles.eyebrow}>Your daily practice</p>
           <h2>Today’s quests</h2>
         </div>
-        <span className={styles.count}>{today.completed_count} / 3</span>
+        <span className={styles.count}>{today.completed_count} of 3 complete</span>
       </div>
       <progress
         className={styles.dailyProgress}
@@ -66,14 +39,14 @@ export function TodayPage({ today }: { today: Today }) {
         </p>
       )}
       <div className={styles.questList}>
-        {today.quests.map((q, i) => (
+        {today.quests.map((q) => (
           <Link
             key={q.id}
             to={`/quest/${q.id}`}
             className={`${styles.questCard} ${q.completed ? styles.completed : ""}`}
           >
             <span className={styles.questIndex} aria-hidden="true">
-              {q.completed ? "✓" : String(i + 1).padStart(2, "0")}
+              <Icon name={q.completed ? "check" : "focus"} />
             </span>
             <div>
               <span className={styles.tag}>
@@ -94,10 +67,20 @@ export function TodayPage({ today }: { today: Today }) {
               +{q.xp}
               <small>XP</small>
             </span>
-            <span aria-hidden="true">↗</span>
+            <Icon name="arrow" />
           </Link>
         ))}
       </div>
+      <section className={styles.progressCard} aria-label="Your progression">
+        <div className={styles.level}>
+          <strong>Level {today.level}</strong>
+          <span className={styles.small}>{today.total_xp.toLocaleString()} total XP</span>
+          <progress value={progress} max={200} aria-label="XP toward next level" />
+          <span className={styles.small}>{200 - progress} XP to level {today.level + 1}</span>
+        </div>
+        <div className={styles.rank}><strong>{today.rank}</strong><small>Rank</small></div>
+        <div className={styles.streak}><strong>{today.streak}</strong><span>day streak</span></div>
+      </section>
       <aside className={styles.quote}>
         <span aria-hidden="true">—</span>
         <p>
@@ -238,7 +221,7 @@ export function StatusPage({ today }: { today: Today }) {
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="#B9C5D4"
-                fontSize="11"
+                fontSize="14"
               >
                 {a}
               </text>

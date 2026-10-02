@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Landing } from "./features/Landing";
+import { Waitlist } from "./features/Waitlist";
+import { Privacy } from "./features/Privacy";
+import { Icon } from "./features/Icon";
 import {
   ApiError,
   configured,
@@ -42,6 +46,7 @@ export function App() {
   const [error, setError] = useState("");
   const lastUser = useRef<string | null>(null);
   const client = useQueryClient();
+  const location = useLocation();
   useEffect(() => {
     if (!configured) return;
     let active = true;
@@ -91,13 +96,19 @@ export function App() {
       <main className={styles.auth}>
         <h1>Unable to restore your session</h1>
         <p role="alert">{error}</p>
-        <button onClick={() => location.reload()}>Retry</button>
+        <button onClick={() => window.location.reload()}>Retry</button>
       </main>
     );
   return (
     <>
       <UpdatePrompt />
-      {session ? (
+      {location.pathname === "/discover" || (!session && location.pathname === "/") ? (
+        <Landing signedIn={Boolean(session)} />
+      ) : location.pathname === "/waitlist" ? (
+        <Waitlist key={session?.user.id ?? "signed-out"} session={session} />
+      ) : location.pathname === "/privacy" ? (
+        <Privacy />
+      ) : session ? (
         <SignedIn key={session.user.id} session={session} />
       ) : (
         <Auth />
@@ -237,6 +248,7 @@ function SignedIn({ session }: { session: Session }) {
         )}
         {today ? (
           <Routes>
+            <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="/" element={<TodayPage today={today} />} />
             <Route
               path="/quest/:id"
@@ -287,18 +299,18 @@ function SignedIn({ session }: { session: Session }) {
         ) : null}
       </main>
       <nav className={styles.nav} aria-label="Main navigation">
-        {[
-          ["/", "Today", "◷"],
-          ["/status", "Status", "◇"],
-          ["/profile", "Profile", "○"],
-        ].map(([to, label, icon]) => (
+        {([
+          ["/", "Today", "today"],
+          ["/status", "Status", "status"],
+          ["/profile", "Profile", "profile"],
+        ] as const).map(([to, label, icon]) => (
           <NavLink
             key={to}
             to={to}
             end
             className={({ isActive }) => (isActive ? styles.navActive : "")}
           >
-            <span aria-hidden="true">{icon}</span>
+            <Icon name={icon} />
             {label}
           </NavLink>
         ))}

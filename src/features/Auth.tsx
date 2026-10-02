@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { configured, supabase } from "../lib/api";
 import { emailSchema, otpSchema } from "../lib/validation";
 import styles from "../ui.module.css";
-export function Auth() {
+export function Auth({intent = "login"}:{intent?:"login"|"waitlist"}) {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [sent, setSent] = useState(false);
@@ -91,22 +91,15 @@ export function Auth() {
     );
   return (
     <main className={styles.auth}>
+      <a href="/discover" className={styles.back}>Back to ARC</a>
       <div className={styles.brand}>
         ARC<span>V1 / BETA</span>
       </div>
-      <div className={styles.orbit} aria-hidden="true">
-        A
-      </div>
-      <p className={styles.eyebrow}>A little progress. Every day.</p>
       <h1>
-        Build the person
-        <br />
-        you want to become.
+        {intent === "waitlist" ? "A place for your next chapter." : sent ? "Check your inbox." : "Your next chapter starts small."}
       </h1>
       <p>
-        Three daily quests. Five attributes.
-        <br />
-        One steady arc of progress.
+        {intent === "waitlist" ? "Verify your email to join the waitlist for future beta access. This does not reserve a spot or start onboarding." : "Sign in or create your beta account with a six-digit email code. No password to remember."}
       </p>
       <form
         onSubmit={(e) => {
@@ -124,6 +117,7 @@ export function Auth() {
           disabled={sent || busy}
           onChange={(e) => setEmail(e.target.value)}
           required
+          aria-invalid={Boolean(error) || undefined}
         />
         {sent && (
           <>
@@ -138,6 +132,8 @@ export function Auth() {
               value={token}
               onChange={(e) => setToken(e.target.value)}
               required
+              autoFocus
+              aria-invalid={Boolean(error) || undefined}
             />
           </>
         )}
@@ -172,7 +168,7 @@ export function Auth() {
           </>
         )}
       </form>
-      <p className={styles.small}>Free private beta · Made for steady growth</p>
+      <p className={styles.small}>Free private beta · <a href="/privacy">Privacy information</a></p>
     </main>
   );
 }
